@@ -49,3 +49,11 @@ Path: `/home/igorkan/repos/tennis-prediction-betting-system`
 - Added terminal UI client (`scripts/tui_api.py`).
 - Updated docs to include API/CLI/TUI workflows.
 <!-- API_CLI_TUI_HISTORY:END -->
+
+<!-- INTERFACE_HARDENING_2026_04_21:START -->
+## 2026-04-21 (Interface Hardening)
+- Enabled CORS controls for API browser access (`CORS_ALLOWED_ORIGINS`).
+- Upgraded CLI client with event lookup/manual ingest/OpenAPI commands.
+- Hardened TUI error handling and added manual ingest/OpenAPI actions.
+- Added static GUI API Bridge for calling live API endpoints.
+<!-- INTERFACE_HARDENING_2026_04_21:END -->

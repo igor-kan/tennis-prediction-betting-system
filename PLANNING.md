@@ -5,32 +5,35 @@ Updated: 2026-04-21
 Repository: `tennis-prediction-betting-system`
 
 ## Goal
-Create and maintain a reliable execution roadmap for **Tennis Prediction and Betting System**.
+Maintain a clear execution roadmap for **tennis-prediction-betting-system** based on current codebase signals.
 
-## Context
-Production-oriented repository for Tennis outcome prediction and betting execution using publicly available data.
+## Current Baseline
+- Stack: Python
+- Codebase scan size: 47 files (capped)
+- Test signal: Test-named files detected
+- CI workflows present: Yes
 
 ## Milestones
 1. Stabilize
-- Validate setup/run/test workflows.
-- Address reliability and correctness blockers.
+- Validate setup/run/test workflows and fix breakage.
+- Document core developer workflows in README.
 
 2. Improve
-- Expand automated checks and reduce fragile code paths.
-- Improve developer/operator documentation.
+- Expand test coverage for high-change areas.
+- Reduce ambiguity in command and environment setup.
 
 3. Harden
-- Validate deployment and rollback procedures.
-- Improve observability and failure handling.
+- Strengthen reliability, release checks, and rollback notes.
+- Improve operational visibility and failure handling.
 
 4. Iterate
-- Deliver prioritized features in small, testable increments.
-- Reassess roadmap after each significant release.
+- Ship prioritized improvements in small, verifiable increments.
+- Reassess roadmap after each release milestone.
 
 ## Exit Criteria
-- Reproducible local workflows.
-- Documented and verifiable quality checks.
-- Current docs reflect current behavior.
+- Reproducible local setup and run workflow.
+- Verified quality checks for critical paths.
+- Docs accurately reflect real behavior and constraints.
 <!-- REPO_DOCS_REFRESH_END -->
 
 <!-- ZERO_BUDGET_PLAN:START -->

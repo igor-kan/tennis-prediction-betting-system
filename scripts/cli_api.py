@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -50,6 +49,13 @@ def api_request(base_url: str, method: str, path: str, payload: dict[str, Any] |
         return {"error": "network_error", "detail": str(exc)}
 
 
+def parse_features_json(value: str) -> dict[str, float]:
+    parsed = json.loads(value)
+    if not isinstance(parsed, dict):
+        raise ValueError("--features-json must decode to an object")
+    return {str(k): float(v) for k, v in parsed.items()}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="CLI for Tennis API")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="API base URL (default: %(default)s)")
@@ -57,11 +63,25 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("health", help="GET /healthz")
+    sub.add_parser("openapi", help="GET /openapi.json")
 
     ingest = sub.add_parser("ingest-public", help="POST /etl/public/ingest-latest")
     ingest.add_argument("--limit", type=int, default=20)
 
     sub.add_parser("list-events", help="GET /events")
+
+    event = sub.add_parser("get-event", help="GET /events/{event_id}")
+    event.add_argument("--event-id", required=True)
+
+    manual = sub.add_parser("ingest-manual", help="POST /events/ingest")
+    manual.add_argument("--event-id", required=True)
+    manual.add_argument("--participants", required=True, help="Comma-separated values, e.g. Home,Away")
+    manual.add_argument("--start-time-iso", required=True, help="ISO timestamp")
+    manual.add_argument("--odds", type=float, required=True)
+    manual.add_argument(
+        "--features-json",
+        default='{"rating_delta":0,"form_delta":0,"rest_delta":0,"injury_delta":0,"market_signal":0,"home_advantage":0.25}',
+    )
 
     pred = sub.add_parser("predict", help="POST /predict")
     pred.add_argument("--event-id", required=True)
@@ -97,10 +117,26 @@ def build_parser() -> argparse.ArgumentParser:
 def run(args: argparse.Namespace) -> Any:
     if args.command == "health":
         return api_request(args.base_url, "GET", "/healthz")
+    if args.command == "openapi":
+        return api_request(args.base_url, "GET", "/openapi.json")
     if args.command == "ingest-public":
         return api_request(args.base_url, "POST", "/etl/public/ingest-latest", query={"limit": args.limit})
     if args.command == "list-events":
         return api_request(args.base_url, "GET", "/events")
+    if args.command == "get-event":
+        return api_request(args.base_url, "GET", f"/events/{args.event_id}")
+    if args.command == "ingest-manual":
+        participants = [p.strip() for p in args.participants.split(",") if p.strip()]
+        if len(participants) < 2:
+            raise ValueError("--participants must include at least two names")
+        payload = {
+            "event_id": args.event_id,
+            "participants": participants,
+            "start_time_iso": args.start_time_iso,
+            "market_odds_decimal": args.odds,
+            "features": parse_features_json(args.features_json),
+        }
+        return api_request(args.base_url, "POST", "/events/ingest", payload=payload)
     if args.command == "predict":
         return api_request(args.base_url, "POST", "/predict", payload={"event_id": args.event_id})
     if args.command == "recommend-stake":

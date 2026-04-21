@@ -52,10 +52,10 @@ def api_request(base_url: str, method: str, path: str, payload: dict[str, Any] |
 def prompt(stdscr: curses.window, message: str) -> str:
     height, _ = stdscr.getmaxyx()
     curses.echo()
-    stdscr.addstr(height - 2, 0, " " * 200)
+    stdscr.addstr(height - 2, 0, " " * 220)
     stdscr.addstr(height - 2, 0, message)
     stdscr.refresh()
-    value = stdscr.getstr(height - 2, len(message), 180).decode("utf-8", "replace").strip()
+    value = stdscr.getstr(height - 2, len(message), 200).decode("utf-8", "replace").strip()
     curses.noecho()
     return value
 
@@ -64,7 +64,7 @@ def draw(stdscr: curses.window, base_url: str, output: str) -> None:
     stdscr.erase()
     height, width = stdscr.getmaxyx()
     title = f"Tennis API TUI  |  base: {base_url}"
-    help_line = "h=health i=ingest e=events p=predict r=recommend b=place s=settle k=bankroll f=performance q=quit"
+    help_line = "h=health i=ingest e=events m=manual p=predict r=recommend b=place s=settle k=bankroll f=perf o=openapi q=quit"
 
     stdscr.addnstr(0, 0, title, width - 1, curses.A_BOLD)
     stdscr.addnstr(1, 0, help_line, width - 1)
@@ -86,72 +86,117 @@ def format_output(payload: Any) -> str:
         return str(payload)
 
 
+def to_float(value: str, default: float) -> float:
+    raw = value.strip()
+    if not raw:
+        return default
+    return float(raw)
+
+
 def run_tui(stdscr: curses.window, base_url: str) -> None:
     curses.curs_set(0)
     output = "Ready. Press a key for action."
 
     while True:
         draw(stdscr, base_url, output)
-        key = stdscr.getkey().lower()
+        try:
+            key = stdscr.getkey().lower()
+        except Exception as exc:  # noqa: BLE001
+            output = f"Input error: {exc}"
+            continue
 
-        if key == "q":
-            break
-        if key == "h":
-            output = format_output(api_request(base_url, "GET", "/healthz"))
-            continue
-        if key == "i":
-            limit = prompt(stdscr, "limit (default 20): ") or "20"
-            output = format_output(api_request(base_url, "POST", "/etl/public/ingest-latest", query={"limit": limit}))
-            continue
-        if key == "e":
-            output = format_output(api_request(base_url, "GET", "/events"))
-            continue
-        if key == "p":
-            event_id = prompt(stdscr, "event_id: ")
-            output = format_output(api_request(base_url, "POST", "/predict", payload={"event_id": event_id}))
-            continue
-        if key == "r":
-            event_id = prompt(stdscr, "event_id: ")
-            odds_raw = prompt(stdscr, "odds override (optional): ")
-            payload: dict[str, Any] = {"event_id": event_id}
-            if odds_raw:
-                payload["odds_decimal_override"] = float(odds_raw)
-            output = format_output(api_request(base_url, "POST", "/stake/recommend", payload=payload))
-            continue
-        if key == "b":
-            event_id = prompt(stdscr, "event_id: ")
-            selection = prompt(stdscr, "selection: ")
-            odds = float(prompt(stdscr, "odds_decimal: ") or "1.91")
-            stake = float(prompt(stdscr, "stake_amount: ") or "20")
-            provider = prompt(stdscr, "provider (paper/sportsbook): ") or "paper"
-            output = format_output(
-                api_request(
-                    base_url,
-                    "POST",
-                    "/bets/place",
-                    payload={
-                        "event_id": event_id,
-                        "selection": selection,
-                        "odds_decimal": odds,
-                        "stake_amount": stake,
-                        "provider": provider,
-                    },
+        try:
+            if key == "q":
+                break
+            if key == "h":
+                output = format_output(api_request(base_url, "GET", "/healthz"))
+                continue
+            if key == "o":
+                output = format_output(api_request(base_url, "GET", "/openapi.json"))
+                continue
+            if key == "i":
+                limit = prompt(stdscr, "limit (default 20): ") or "20"
+                output = format_output(api_request(base_url, "POST", "/etl/public/ingest-latest", query={"limit": limit}))
+                continue
+            if key == "e":
+                output = format_output(api_request(base_url, "GET", "/events"))
+                continue
+            if key == "m":
+                event_id = prompt(stdscr, "event_id: ")
+                participants = prompt(stdscr, "participants csv (Home,Away): ")
+                start_time_iso = prompt(stdscr, "start_time_iso: ")
+                odds = to_float(prompt(stdscr, "market_odds_decimal (default 1.91): "), 1.91)
+                features_raw = prompt(stdscr, "features json (enter for defaults): ")
+                if features_raw:
+                    features = json.loads(features_raw)
+                    if not isinstance(features, dict):
+                        raise ValueError("features json must be an object")
+                else:
+                    features = {
+                        "rating_delta": 0,
+                        "form_delta": 0,
+                        "rest_delta": 0,
+                        "injury_delta": 0,
+                        "market_signal": 0,
+                        "home_advantage": 0.25,
+                    }
+                payload = {
+                    "event_id": event_id,
+                    "participants": [x.strip() for x in participants.split(",") if x.strip()],
+                    "start_time_iso": start_time_iso,
+                    "market_odds_decimal": odds,
+                    "features": features,
+                }
+                output = format_output(api_request(base_url, "POST", "/events/ingest", payload=payload))
+                continue
+            if key == "p":
+                event_id = prompt(stdscr, "event_id: ")
+                output = format_output(api_request(base_url, "POST", "/predict", payload={"event_id": event_id}))
+                continue
+            if key == "r":
+                event_id = prompt(stdscr, "event_id: ")
+                odds_raw = prompt(stdscr, "odds override (optional): ")
+                payload: dict[str, Any] = {"event_id": event_id}
+                if odds_raw:
+                    payload["odds_decimal_override"] = to_float(odds_raw, 1.91)
+                output = format_output(api_request(base_url, "POST", "/stake/recommend", payload=payload))
+                continue
+            if key == "b":
+                event_id = prompt(stdscr, "event_id: ")
+                selection = prompt(stdscr, "selection: ")
+                odds = to_float(prompt(stdscr, "odds_decimal (default 1.91): "), 1.91)
+                stake = to_float(prompt(stdscr, "stake_amount (default 20): "), 20.0)
+                provider = prompt(stdscr, "provider (paper/sportsbook): ") or "paper"
+                output = format_output(
+                    api_request(
+                        base_url,
+                        "POST",
+                        "/bets/place",
+                        payload={
+                            "event_id": event_id,
+                            "selection": selection,
+                            "odds_decimal": odds,
+                            "stake_amount": stake,
+                            "provider": provider,
+                        },
+                    )
                 )
-            )
-            continue
-        if key == "s":
-            ticket_id = prompt(stdscr, "ticket_id: ")
-            outcome = prompt(stdscr, "outcome (won/lost/push): ")
-            output = format_output(api_request(base_url, "POST", "/bets/settle", payload={"ticket_id": ticket_id, "outcome": outcome}))
-            continue
-        if key == "k":
-            output = format_output(api_request(base_url, "GET", "/bankroll"))
-            continue
-        if key == "f":
-            output = format_output(api_request(base_url, "GET", "/stats/performance"))
-            continue
+                continue
+            if key == "s":
+                ticket_id = prompt(stdscr, "ticket_id: ")
+                outcome = prompt(stdscr, "outcome (won/lost/push): ")
+                output = format_output(api_request(base_url, "POST", "/bets/settle", payload={"ticket_id": ticket_id, "outcome": outcome}))
+                continue
+            if key == "k":
+                output = format_output(api_request(base_url, "GET", "/bankroll"))
+                continue
+            if key == "f":
+                output = format_output(api_request(base_url, "GET", "/stats/performance"))
+                continue
 
-        output = f"Unknown key: {key}"
+            output = f"Unknown key: {key}"
+        except Exception as exc:  # noqa: BLE001
+            output = f"Action error: {exc}"
 
 
 def build_parser() -> argparse.ArgumentParser:

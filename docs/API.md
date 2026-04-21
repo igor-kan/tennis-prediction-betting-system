@@ -36,3 +36,19 @@ Override target with:
 - `--base-url <url>`
 - or `SPORT_API_BASE_URL` environment variable
 <!-- API_CLI_TUI_DOCS:END -->
+
+<!-- CORS_CONFIG:START -->
+## CORS Configuration
+
+Backend API supports browser clients (GUI bridge, local/static frontends).
+
+- Env var: `CORS_ALLOWED_ORIGINS`
+- Default: `*`
+- Comma-separated list supported for stricter policies.
+
+Examples:
+```bash
+export CORS_ALLOWED_ORIGINS="*"
+export CORS_ALLOWED_ORIGINS="https://igor-kan.github.io,http://127.0.0.1:5500"
+```
+<!-- CORS_CONFIG:END -->

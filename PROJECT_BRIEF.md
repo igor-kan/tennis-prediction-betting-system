@@ -5,42 +5,41 @@ Updated: 2026-04-21
 Repository: `tennis-prediction-betting-system`
 Path: `/home/igorkan/repos/tennis-prediction-betting-system`
 
-## What This Repo Appears To Be
+## What This Repository Appears To Be
 - Title: Tennis Prediction and Betting System
-- Summary: Production-oriented repository for Tennis outcome prediction and betting execution using publicly available data.
+- Summary: Repository for Tennis outcome prediction and betting workflows using publicly available data.
 
 ## Detected Stack
-- Unknown
+- Python
 
 ## Key Paths
 - `backend`
-- `scripts`
+- `api`
 - `docs`
-- `data`
+- `scripts`
+- `.github/workflows`
 - `README.md`
+- `requirements.txt`
 
 ## Command Quickstart
 Setup:
-- `Refer to README for setup`
+- `python3 -m pip install -r requirements.txt`
 
 Run:
-- `Refer to README for run/start command`
+- `Review repository README for run/start command`
 
-Test/Quality:
-- `Add and run repository-specific tests`
+Quality:
+- `Review CI/workflow commands in .github/workflows`
 
 ## Codebase Signals
-- Files scanned (capped): 36
-- Common extensions: .py, .md, .sh, .example, .ini, .txt, .tag
+- Files scanned (capped): 47
+- Common extensions: .py, .md, .sh, [no_ext], .txt, .json, .html
+- Test signal: Test-named files detected
+- CI workflows present: Yes
 
-## Risks / Gaps To Review
-- No obvious automated test structure detected
-- No obvious CI workflow detected
-
-## Intended Audience
-This brief is designed for both:
-- Human maintainers who need orientation and execution guidance.
-- AI coding agents that need repository-specific context before editing.
+## Immediate Risks / Gaps
+- Test-named files detected
+- Review command reproducibility for local onboarding and CI parity.
 <!-- REPO_DOCS_REFRESH_END -->
 
 <!-- ZERO_BUDGET_BRIEF:START -->

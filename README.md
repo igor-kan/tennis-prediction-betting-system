@@ -97,3 +97,53 @@ Use keys: `h i e p r b s k f q`.
 OpenAPI docs when backend runs locally:
 - `http://127.0.0.1:8100/docs`
 <!-- API_CLI_TUI:END -->
+
+<!-- REPO_ANALYSIS_OVERVIEW_START -->
+## Repository Analysis Snapshot
+
+Generated: 2026-04-21
+
+- Primary stack: Python
+- Key paths: `backend`, `api`, `docs`, `scripts`, `.github/workflows`, `README.md`, `requirements.txt`
+- Files scanned (capped): 47
+- Test signal: Test-named files detected
+- CI workflows present: Yes
+
+### Quick Commands
+
+Setup:
+- `python3 -m pip install -r requirements.txt`
+
+Run:
+- `Review repository README for run/start command`
+
+Quality:
+- `Review CI/workflow commands in .github/workflows`
+
+### Companion Docs
+
+- `AGENTS.md`
+- `TASKS.md`
+- `PLANNING.md`
+- `RESEARCH.md`
+- `PROJECT_BRIEF.md`
+<!-- REPO_ANALYSIS_OVERVIEW_END -->
+
+<!-- CORS_AND_GUI_BRIDGE:START -->
+## GUI <-> API Bridge + CORS
+
+The static GUI (`docs/index.html`) now includes an **API Bridge** card.
+
+- Set API base URL (example: `http://127.0.0.1:8100`)
+- Use bridge buttons to call live API endpoints from GUI
+- Keep using local browser mode when API is not set
+
+CORS is enabled in backend API via `CORS_ALLOWED_ORIGINS`:
+```bash
+# allow any origin (default)
+export CORS_ALLOWED_ORIGINS="*"
+
+# or restrict to specific origins
+export CORS_ALLOWED_ORIGINS="https://igor-kan.github.io,http://127.0.0.1:5500"
+```
+<!-- CORS_AND_GUI_BRIDGE:END -->

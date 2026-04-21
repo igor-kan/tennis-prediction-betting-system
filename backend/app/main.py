@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import uuid
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from .db import SessionLocal, engine
@@ -29,6 +31,16 @@ from .schemas import (
 from .sport_profile import SPORT_NAME
 
 app = FastAPI(title=f"{SPORT_NAME} Prediction and Betting API", version="0.3.0")
+
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "*")
+cors_origins = [x.strip() for x in CORS_ALLOWED_ORIGINS.split(",") if x.strip()] or ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=False if cors_origins == ["*"] else True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 RISK_LIMITS = {
     "min_edge": 0.01,

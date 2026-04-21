@@ -43,3 +43,37 @@ Last updated: 2026-04-21
 - [x] Added terminal TUI client in `scripts/tui_api.py`.
 - [ ] Add integration tests for CLI/TUI command paths.
 <!-- API_CLI_TUI_TASKS:END -->
+
+<!-- REPO_DOCS_REFRESH_START -->
+# TASKS
+
+Updated: 2026-04-21
+Repository: `tennis-prediction-betting-system`
+
+## Immediate
+- [ ] Run and verify setup command(s): `python3 -m pip install -r requirements.txt`
+- [ ] Run and verify primary start command(s): `Review repository README for run/start command`
+- [ ] Run quality checks: `Review CI/workflow commands in .github/workflows`
+- [ ] Confirm key paths are still accurate: `backend`, `api`, `docs`, `scripts`, `.github/workflows`, `README.md`, `requirements.txt`
+
+## Next
+- [ ] Prioritize top 3 reliability improvements for this repository.
+- [ ] Expand automated tests around highest-risk areas.
+- [ ] Tighten command documentation in README for onboarding speed.
+
+## Ongoing Maintenance
+- [ ] Keep README and architecture notes synchronized with code changes.
+- [ ] Track technical debt and refactor candidates in `PLANNING.md`.
+- [ ] Track unknowns and external dependencies in `RESEARCH.md`.
+
+## Completed Recently
+- [x] Repository-specific task file refreshed on 2026-04-21.
+<!-- REPO_DOCS_REFRESH_END -->
+
+<!-- CORS_GUI_TASKS:START -->
+## API/GUI Bridge Hardening
+- [x] Added API bridge controls to static GUI.
+- [x] Enabled API CORS for browser-based API usage.
+- [x] Hardened CLI/TUI with better command/error handling.
+- [ ] Add end-to-end browser automation for GUI bridge.
+<!-- CORS_GUI_TASKS:END -->

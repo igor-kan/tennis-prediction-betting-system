@@ -4,27 +4,28 @@
 Updated: 2026-04-21
 Repository: `tennis-prediction-betting-system`
 
-## Focus
-- Domain and implementation risks specific to `tennis-prediction-betting-system`.
-- Stack-sensitive concerns for: Unknown.
+## Focus Areas
+- Domain keywords: tennis prediction betting system
+- Technology stack: Python
 
-## Questions
-- Which modules are most likely to fail under change?
-- Which dependencies or external services need version/compatibility validation?
-- Which performance, security, or data-integrity constraints are least documented?
+## Open Questions
+- Which modules in `tennis-prediction-betting-system` represent the highest reliability risk?
+- Which external services/APIs/framework versions require compatibility validation?
+- Which performance/security constraints should be tested before next release?
 
 ## Investigation Backlog
-- [ ] Capture architecture notes tied to real code paths.
-- [ ] Identify missing automated coverage for critical workflows.
-- [ ] Document concrete mitigation strategies for top risks.
+- [ ] Capture architecture notes from key paths: `backend`, `api`, `docs`, `scripts`, `.github/workflows`, `README.md`, `requirements.txt`
+- [ ] Identify missing monitoring/test coverage for production-critical paths.
+- [ ] Document known limitations and mitigation strategies.
 
-## Known Structural Gaps
-- No obvious automated test structure detected
-- No obvious CI workflow detected
+## Codebase Signals
+- Files scanned (capped): 47
+- Common extensions: .py, .md, .sh, [no_ext], .txt, .json, .html
+- Test signal: Test-named files detected
+- CI workflows present: Yes
 
-## Evidence Notes
-- Scanned file sample size: 36 (cap: 1800).
-- Key docs and commands are listed in `PROJECT_BRIEF.md`.
+## Evidence Log
+- Keep references to benchmark runs, incident notes, dependency advisories, and design decisions here.
 <!-- REPO_DOCS_REFRESH_END -->
 
 <!-- ZERO_BUDGET_RESEARCH:START -->
