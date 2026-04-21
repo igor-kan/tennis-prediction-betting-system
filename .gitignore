@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+.DS_Store
+backend/.venv/
+data/raw/
+data/processed/
+data/reports/
+data/models/
+*.db
+.vercel/

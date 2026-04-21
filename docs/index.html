@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tennis Predictor</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --ok:#22c55e; --warn:#f59e0b; --text:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background: radial-gradient(circle at top,#1e293b,#0f172a 60%); color:var(--text); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0 0 8px 0; }
+    .muted { color: var(--muted); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin-top:16px; }
+    .card { background: rgba(17,24,39,.95); border:1px solid #334155; border-radius:12px; padding:14px; }
+    button,input,select { background:#0b1220; color:var(--text); border:1px solid #334155; border-radius:8px; padding:8px; }
+    button { cursor:pointer; }
+    button:hover { border-color:#64748b; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; }
+    .row > * { flex:1; min-width:110px; }
+    pre { white-space: pre-wrap; word-break: break-word; background:#0b1220; border:1px solid #334155; border-radius:8px; padding:10px; max-height:260px; overflow:auto; }
+    table { width:100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom:1px solid #334155; padding:6px; text-align:left; }
+    tr:hover { background:#0b1220; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; }
+    .ok { background:#14532d; color:#bbf7d0; }
+    .warn { background:#78350f; color:#fde68a; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Tennis Prediction + Betting Console</h1>
+    <div class="muted">Fully static, free-hosted on GitHub Pages. Data and bankroll stored in your browser.</div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Public Data</h3>
+        <div class="row">
+          <button id="fetchBtn">Fetch Latest Events</button>
+          <button id="clearBtn">Clear Local Data</button>
+        </div>
+        <div id="sourceInfo" class="muted" style="margin-top:8px"></div>
+        <div style="max-height:280px; overflow:auto; margin-top:8px;">
+          <table>
+            <thead><tr><th>Event</th><th>Start</th><th>Odds</th><th></th></tr></thead>
+            <tbody id="eventsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Manual Event</h3>
+        <div class="row"><input id="eventId" placeholder="event-id" /><input id="participants" placeholder="Home,Away" /></div>
+        <div class="row"><input id="startIso" placeholder="2026-04-21T19:00:00Z" /><input id="odds" type="number" step="0.01" value="1.91" /></div>
+        <div class="row"><input id="rating" type="number" step="0.01" placeholder="rating_delta" /><input id="form" type="number" step="0.01" placeholder="form_delta" /></div>
+        <div class="row"><input id="rest" type="number" step="0.01" placeholder="rest_delta" /><input id="injury" type="number" step="0.01" placeholder="injury_delta" /></div>
+        <div class="row"><input id="market" type="number" step="0.01" placeholder="market_signal" /><input id="home" type="number" step="0.01" value="0.25" placeholder="home_advantage" /></div>
+        <button id="saveManualBtn">Save Manual Event</button>
+      </div>
+
+      <div class="card">
+        <h3>Prediction</h3>
+        <div class="row">
+          <input id="selectedEvent" placeholder="selected event_id" />
+          <button id="predictBtn">Predict</button>
+        </div>
+        <pre id="predictOut"></pre>
+      </div>
+
+      <div class="card">
+        <h3>Betting</h3>
+        <div class="row"><input id="betSelection" placeholder="selection" value="Home" /><input id="betOdds" type="number" step="0.01" value="1.91" /></div>
+        <div class="row"><input id="betStake" type="number" step="0.01" value="20" /><button id="recommendBtn">Recommend Stake</button></div>
+        <div class="row"><button id="placeBtn">Place Bet</button><button id="settleWinBtn">Settle Win</button><button id="settleLoseBtn">Settle Loss</button></div>
+        <pre id="betOut"></pre>
+      </div>
+
+      <div class="card">
+        <h3>Bankroll + Performance</h3>
+        <pre id="bankrollOut"></pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const SPORT = "Tennis";
+  const SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/tennis/scoreboard";
+  const REPO_KEY = "tennis-prediction-betting-system";
+
+  const state = {
+    events: load("events", {}),
+    bankroll: load("bankroll", {currency:"USD", starting:10000, balance:10000, open:[], history:[]}),
+    lastTicket: null,
+  };
+
+  const LIMITS = { min_edge:0.01, min_confidence:0.58, max_stake_fraction:0.02, max_stake_abs:250, max_open_exposure_fraction:0.12 };
+
+  function key(name){ return `${REPO_KEY}:${name}`; }
+  function load(name, fallback){ try{ return JSON.parse(localStorage.getItem(key(name))) ?? fallback; } catch { return fallback; } }
+  function save(name, value){ localStorage.setItem(key(name), JSON.stringify(value)); }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function sigmoid(x){ return 1/(1+Math.exp(-x)); }
+  function implied(odds){ return 1/odds; }
+  function fairOdds(p){ return 1/clamp(p,0.01,0.99); }
+  function rnd(v,n=4){ return Number.parseFloat(v).toFixed(n); }
+
+  const W = {rating_delta:1.10, form_delta:0.85, rest_delta:0.40, injury_delta:0.70, market_signal:0.35, home_advantage:0.30};
+
+  function modelLinear(f){
+    const score = Object.keys(W).reduce((s,k)=>s + (W[k]*(+f[k]||0)),0);
+    return clamp(sigmoid(score/2.2),0.01,0.99);
+  }
+  function modelNonLinear(f){
+    const r=+f.rating_delta||0, fo=+f.form_delta||0, re=+f.rest_delta||0, i=+f.injury_delta||0, h=+f.home_advantage||0;
+    const base = Object.keys(W).reduce((s,k)=>s + (W[k]*(+f[k]||0)),0);
+    const inter = 0.9*r*fo + 0.45*re*h - 0.8*i*Math.abs(fo);
+    const sat = 0.7*Math.tanh(r)+0.6*Math.tanh(fo)+0.25*Math.tanh(h);
+    return clamp(sigmoid((0.5*base + inter + sat)/2.0),0.01,0.99);
+  }
+  function modelMomentum(f){
+    const s = 1.2*(+f.form_delta||0)+0.85*(+f.rating_delta||0)+0.35*(+f.home_advantage||0)-0.7*(+f.injury_delta||0)+0.25*(+f.rest_delta||0);
+    return clamp(sigmoid(s),0.01,0.99);
+  }
+
+  function predict(features, marketOdds){
+    const c = { linear:modelLinear(features), nonlinear:modelNonLinear(features), momentum:modelMomentum(features) };
+    let probs = [c.linear,c.nonlinear,c.momentum];
+    let weights = [0.4,0.35,0.25];
+    if (marketOdds && marketOdds>1){ c.market = implied(marketOdds); probs.push(c.market); weights=[0.3,0.3,0.2,0.2]; }
+    const p = probs.reduce((s,v,i)=>s+v*weights[i],0);
+    const mean = probs.reduce((a,b)=>a+b,0)/probs.length;
+    const std = Math.sqrt(probs.reduce((s,v)=>s+(v-mean)*(v-mean),0)/probs.length);
+    const edge = marketOdds? p-implied(marketOdds) : p-0.5;
+    const coverage = Object.keys(W).length/6;
+    const confidence = clamp(0.45 + 0.25*coverage + 0.2*clamp(1-2.2*std,0,1)+0.1*clamp(Math.abs(edge)*4,0,1)+(marketOdds?0.05:0),0.55,0.97);
+
+    // Monte Carlo uncertainty
+    const sigma = Math.max(0.015, std*0.7 + (1-confidence)*0.2);
+    const N = 2000;
+    const samples = Array.from({length:N}, ()=>clamp(randn(p,sigma),0.01,0.99)).sort((a,b)=>a-b);
+    const q = (x)=>samples[Math.floor(x*(N-1))];
+    const ev = marketOdds ? samples.map(sp => (sp*(marketOdds-1))-(1-sp)) : [];
+    const pev = ev.length ? ev.filter(v=>v>0).length/ev.length : 0;
+
+    return {
+      probability: +rnd(p,4),
+      confidence: +rnd(confidence,4),
+      edge: +rnd(edge,4),
+      fair_odds: +rnd(fairOdds(p),4),
+      components: Object.fromEntries(Object.entries(c).map(([k,v])=>[k,+rnd(v,4)])),
+      simulation: { q10:+rnd(q(0.1),4), q50:+rnd(q(0.5),4), q90:+rnd(q(0.9),4), positive_ev_probability:+rnd(pev,4) }
+    };
+  }
+
+  function randn(mu, sigma){
+    let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    const z=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+    return mu+sigma*z;
+  }
+
+  function recommendStake(pred, odds){
+    const balance = state.bankroll.balance;
+    if (pred.edge < LIMITS.min_edge) return {stake:0, reason:"edge below threshold"};
+    if (pred.confidence < LIMITS.min_confidence) return {stake:0, reason:"confidence below threshold"};
+    const b = odds - 1;
+    if (b <= 0) return {stake:0, reason:"invalid odds"};
+    const kelly = Math.max(0, ((odds*pred.probability)-1)/b);
+    const quarter = 0.25*kelly;
+    const raw = balance*quarter;
+    const cap = Math.min(balance*LIMITS.max_stake_fraction, LIMITS.max_stake_abs);
+    return { stake: +rnd(Math.max(0, Math.min(raw, cap)),2), reason:"quarter-kelly capped" };
+  }
+
+  function openExposure(){ return state.bankroll.open.reduce((s,b)=>s+b.stake_amount,0); }
+  function canStake(stake){
+    if (stake<=0) return [false,"stake must be > 0"];
+    if (stake>state.bankroll.balance) return [false,"insufficient balance"];
+    const cap = Math.min(state.bankroll.balance*LIMITS.max_stake_fraction, LIMITS.max_stake_abs);
+    if (stake>cap) return [false,`stake exceeds per-bet cap ${cap.toFixed(2)}`];
+    const maxOpen = state.bankroll.balance*LIMITS.max_open_exposure_fraction;
+    if (openExposure()+stake > maxOpen) return [false,`open exposure cap ${maxOpen.toFixed(2)} exceeded`];
+    return [true,"ok"];
+  }
+
+  function addManualEvent(){
+    const id = byId("eventId").value.trim();
+    if(!id) return alert("event_id required");
+    const participants = byId("participants").value.split(",").map(s=>s.trim()).filter(Boolean);
+    if(participants.length<2) return alert("participants must contain at least 2 names");
+    const event = {
+      event_id:id,
+      participants,
+      start_time_iso: byId("startIso").value.trim() || new Date().toISOString(),
+      market_odds_decimal: Number(byId("odds").value||1.91),
+      features: {
+        rating_delta:Number(byId("rating").value||0),
+        form_delta:Number(byId("form").value||0),
+        rest_delta:Number(byId("rest").value||0),
+        injury_delta:Number(byId("injury").value||0),
+        market_signal:Number(byId("market").value||0),
+        home_advantage:Number(byId("home").value||0.25)
+      },
+      source:"manual"
+    };
+    state.events[id]=event; save("events", state.events); renderEvents();
+  }
+
+  async function fetchEvents(){
+    if(!SCOREBOARD_URL){ byId("sourceInfo").textContent = "No public scoreboard URL configured for this sport. Use manual events."; return; }
+    byId("sourceInfo").textContent = `Fetching: ${SCOREBOARD_URL}`;
+    try {
+      const r = await fetch(SCOREBOARD_URL);
+      const j = await r.json();
+      let n=0;
+      for(const ev of (j.events||[])){
+        const comp = (ev.competitions||[])[0]; if(!comp) continue;
+        const competitors = comp.competitors || [];
+        const participants = competitors.map(c=>c?.team?.displayName).filter(Boolean);
+        if(participants.length<2) continue;
+        let odds = 1.91;
+        const arr = comp.odds || [];
+        if(Array.isArray(arr) && arr[0] && typeof arr[0]==='object'){
+          const x = Number(arr[0].homeTeamOdds || arr[0].awayTeamOdds || 1.91);
+          if (x>1) odds = x;
+        }
+        const home_adv = comp.neutralSite ? 0.0 : 0.25;
+        const id = `espn-${ev.id}`;
+        state.events[id] = {
+          event_id:id,
+          participants,
+          start_time_iso: ev.date || new Date().toISOString(),
+          market_odds_decimal: odds,
+          features:{rating_delta:0,form_delta:0,rest_delta:0,injury_delta:0,market_signal:0,home_advantage:home_adv},
+          source:"espn"
+        };
+        n++;
+      }
+      save("events", state.events);
+      byId("sourceInfo").textContent = `Fetched and updated ${n} events.`;
+      renderEvents();
+    } catch(e){
+      byId("sourceInfo").textContent = `Fetch failed: ${e}`;
+    }
+  }
+
+  function doPredict(){
+    const id = byId("selectedEvent").value.trim();
+    const ev = state.events[id];
+    if(!ev){ byId("predictOut").textContent="event not found"; return; }
+    const out = predict(ev.features, ev.market_odds_decimal);
+    byId("predictOut").textContent = JSON.stringify({...ev, prediction: out}, null, 2);
+    return out;
+  }
+
+  function doRecommend(){
+    const id = byId("selectedEvent").value.trim();
+    const ev = state.events[id]; if(!ev) return;
+    const out = doPredict(); if(!out) return;
+    const rec = recommendStake(out, Number(byId("betOdds").value || ev.market_odds_decimal));
+    byId("betStake").value = rec.stake || 0;
+    byId("betOut").textContent = JSON.stringify({recommendation:rec, prediction:out}, null, 2);
+  }
+
+  function placeBet(){
+    const id = byId("selectedEvent").value.trim();
+    const ev = state.events[id]; if(!ev) return alert("select event");
+    const stake = Number(byId("betStake").value||0);
+    const odds = Number(byId("betOdds").value||ev.market_odds_decimal);
+    const selection = byId("betSelection").value.trim() || ev.participants[0];
+
+    const [ok,msg]=canStake(stake);
+    if(!ok){ byId("betOut").textContent = JSON.stringify({accepted:false, reason:msg},null,2); return; }
+
+    const ticket = `paper-${Math.random().toString(36).slice(2)}`;
+    state.bankroll.balance = +(state.bankroll.balance - stake).toFixed(2);
+    state.bankroll.open.push({ticket_id:ticket,event_id:id,selection,stake_amount:stake,odds_decimal:odds,status:"open"});
+    state.lastTicket = ticket;
+    save("bankroll", state.bankroll);
+    byId("betOut").textContent = JSON.stringify({accepted:true,ticket_id:ticket},null,2);
+    renderBankroll();
+  }
+
+  function settle(outcome){
+    const ticket = state.lastTicket;
+    if(!ticket) return alert("no recent ticket");
+    const i = state.bankroll.open.findIndex(b=>b.ticket_id===ticket);
+    if(i<0) return alert("open ticket not found");
+    const bet = state.bankroll.open.splice(i,1)[0];
+    let payout=0;
+    if(outcome==="won") payout = +(bet.stake_amount*bet.odds_decimal).toFixed(2);
+    if(outcome==="push") payout = +bet.stake_amount.toFixed(2);
+    state.bankroll.balance = +(state.bankroll.balance + payout).toFixed(2);
+    state.bankroll.history.push({...bet,status:"settled",outcome,payout});
+    save("bankroll", state.bankroll);
+    byId("betOut").textContent = JSON.stringify({settled:true,ticket_id:ticket,outcome,payout,balance:state.bankroll.balance},null,2);
+    renderBankroll();
+  }
+
+  function renderEvents(){
+    const body = byId("eventsBody");
+    body.innerHTML = "";
+    const events = Object.values(state.events).sort((a,b)=>String(a.start_time_iso).localeCompare(String(b.start_time_iso)));
+    for(const ev of events){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${ev.participants.join(" vs ")}<br><span class="muted">${ev.event_id}</span></td><td>${ev.start_time_iso}</td><td>${ev.market_odds_decimal}</td><td><button data-id="${ev.event_id}">Use</button></td>`;
+      tr.querySelector("button").onclick = () => { byId("selectedEvent").value = ev.event_id; byId("betOdds").value = ev.market_odds_decimal; byId("betSelection").value = ev.participants[0] || "Home"; };
+      body.appendChild(tr);
+    }
+  }
+
+  function renderBankroll(){
+    const hist = state.bankroll.history;
+    const wins = hist.filter(h=>h.outcome==="won").length;
+    const staked = hist.reduce((s,h)=>s+h.stake_amount,0);
+    const payout = hist.reduce((s,h)=>s+(h.payout||0),0);
+    const roi = staked>0 ? (payout-staked)/staked : 0;
+    byId("bankrollOut").textContent = JSON.stringify({
+      currency: state.bankroll.currency,
+      starting: state.bankroll.starting,
+      balance: state.bankroll.balance,
+      open_bets: state.bankroll.open,
+      settled_bets: hist.length,
+      win_rate: hist.length ? +(wins/hist.length).toFixed(4) : 0,
+      roi: +roi.toFixed(4)
+    }, null, 2);
+  }
+
+  function byId(id){ return document.getElementById(id); }
+
+  byId("fetchBtn").onclick = fetchEvents;
+  byId("clearBtn").onclick = () => {
+    if(!confirm("Clear local events and bankroll?")) return;
+    localStorage.removeItem(key("events"));
+    localStorage.removeItem(key("bankroll"));
+    state.events={};
+    state.bankroll={currency:"USD", starting:10000, balance:10000, open:[], history:[]};
+    state.lastTicket=null;
+    renderEvents(); renderBankroll();
+  };
+  byId("saveManualBtn").onclick = addManualEvent;
+  byId("predictBtn").onclick = doPredict;
+  byId("recommendBtn").onclick = doRecommend;
+  byId("placeBtn").onclick = placeBet;
+  byId("settleWinBtn").onclick = ()=>settle("won");
+  byId("settleLoseBtn").onclick = ()=>settle("lost");
+
+  byId("sourceInfo").textContent = SCOREBOARD_URL ? `Public source: ${SCOREBOARD_URL}` : "No public API configured for this sport. Use manual events.";
+  renderEvents();
+  renderBankroll();
+})();
+</script>
+</body>
+</html>
