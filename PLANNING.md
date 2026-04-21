@@ -40,3 +40,10 @@ Production-oriented repository for Tennis outcome prediction and betting executi
 3. Treat backend services as optional local-only tooling unless a free host exists.
 4. Reject changes that introduce mandatory paid dependencies.
 <!-- ZERO_BUDGET_PLAN:END -->
+
+<!-- API_CLI_TUI_PLAN:START -->
+## Interface Roadmap
+1. Keep REST API as source-of-truth interface.
+2. Keep CLI/TUI aligned with API endpoint changes.
+3. Add smoke checks that exercise API + CLI/TUI after releases.
+<!-- API_CLI_TUI_PLAN:END -->

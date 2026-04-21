@@ -33,3 +33,10 @@ Repository: `tennis-prediction-betting-system`
 - Vercel Hobby project caps can block additional deployments.
 - Static-first architecture avoids recurring server and database costs.
 <!-- ZERO_BUDGET_RESEARCH:END -->
+
+<!-- API_CLI_TUI_RESEARCH:START -->
+## API/CLI/TUI Notes
+- API endpoints are FastAPI-native and OpenAPI-documented (`/docs`).
+- CLI and TUI are lightweight clients that avoid extra dependencies.
+- Shared endpoint usage reduces interface divergence risk.
+<!-- API_CLI_TUI_RESEARCH:END -->

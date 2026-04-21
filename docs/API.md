@@ -23,3 +23,16 @@
 - `GET /bankroll` bankroll/open/history.
 - `GET /stats/performance` settled performance metrics.
 - `POST /simulate/backtest` batch ROI simulation.
+
+<!-- API_CLI_TUI_DOCS:START -->
+## CLI and TUI Clients
+
+The API can be operated from terminal:
+- CLI: `python3 scripts/cli_api.py --help`
+- TUI: `python3 scripts/tui_api.py`
+
+Both clients call the same REST endpoints and default to `http://127.0.0.1:8100`.
+Override target with:
+- `--base-url <url>`
+- or `SPORT_API_BASE_URL` environment variable
+<!-- API_CLI_TUI_DOCS:END -->

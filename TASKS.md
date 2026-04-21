@@ -35,3 +35,11 @@ Last updated: 2026-04-21
 - [x] Core demo flow runs without paid infrastructure.
 - [ ] Verify GitHub Pages deploy health monthly.
 <!-- ZERO_BUDGET_TASKS:END -->
+
+<!-- API_CLI_TUI_TASKS:START -->
+## API + CLI + TUI Tasks
+- [x] FastAPI endpoints available for prediction/betting workflows.
+- [x] Added API CLI client in `scripts/cli_api.py`.
+- [x] Added terminal TUI client in `scripts/tui_api.py`.
+- [ ] Add integration tests for CLI/TUI command paths.
+<!-- API_CLI_TUI_TASKS:END -->

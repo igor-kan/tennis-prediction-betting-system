@@ -61,3 +61,39 @@ This repository includes a fully static GUI app at `docs/index.html`, deployable
 - No paid backend required (client-side prediction + browser-stored bankroll)
 
 <!-- FREE_STATIC_HOSTING:END -->
+
+<!-- API_CLI_TUI:START -->
+## API + CLI + TUI
+
+This project supports three operator interfaces:
+- REST API (FastAPI backend)
+- CLI client (`scripts/cli_api.py`)
+- Terminal UI (`scripts/tui_api.py`)
+
+Start local API:
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8100
+```
+
+CLI usage:
+```bash
+python3 scripts/cli_api.py --help
+python3 scripts/cli_api.py health
+python3 scripts/cli_api.py ingest-public --limit 20
+python3 scripts/cli_api.py list-events
+python3 scripts/cli_api.py predict --event-id <event_id>
+```
+
+TUI usage:
+```bash
+python3 scripts/tui_api.py
+```
+Use keys: `h i e p r b s k f q`.
+
+OpenAPI docs when backend runs locally:
+- `http://127.0.0.1:8100/docs`
+<!-- API_CLI_TUI:END -->

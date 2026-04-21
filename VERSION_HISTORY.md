@@ -42,3 +42,10 @@ Path: `/home/igorkan/repos/tennis-prediction-betting-system`
 - Added zero-budget hosting policy and GitHub Pages-first deployment guidance.
 - Marked static GUI path as the mandatory free deployment surface.
 <!-- ZERO_BUDGET_HISTORY:END -->
+
+<!-- API_CLI_TUI_HISTORY:START -->
+## 2026-04-21
+- Added API command-line client (`scripts/cli_api.py`).
+- Added terminal UI client (`scripts/tui_api.py`).
+- Updated docs to include API/CLI/TUI workflows.
+<!-- API_CLI_TUI_HISTORY:END -->

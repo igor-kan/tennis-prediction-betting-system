@@ -50,3 +50,9 @@ Quality checks:
 - Keep `docs/index.html` fully usable as the production demo path.
 - Paid services are optional and must stay disabled by default.
 <!-- ZERO_BUDGET_HOSTING:END -->
+
+<!-- API_CLI_TUI_AGENT:START -->
+## Interface Contract
+- Preserve compatibility for REST API, CLI (`scripts/cli_api.py`), and TUI (`scripts/tui_api.py`).
+- New betting features should be exposed through API first, then wired into CLI/TUI.
+<!-- API_CLI_TUI_AGENT:END -->

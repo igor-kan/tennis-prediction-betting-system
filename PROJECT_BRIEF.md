@@ -47,3 +47,12 @@ This brief is designed for both:
 ## Hosting Constraint
 This project is maintained under a strict zero-budget rule. Public deployment must work on free hosting (GitHub Pages) with no paid cloud requirements.
 <!-- ZERO_BUDGET_BRIEF:END -->
+
+<!-- API_CLI_TUI_BRIEF:START -->
+## Interface Surfaces
+The system is designed for multi-interface usage:
+- Browser GUI
+- REST API
+- CLI client
+- Terminal UI client
+<!-- API_CLI_TUI_BRIEF:END -->
