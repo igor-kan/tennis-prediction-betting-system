@@ -105,9 +105,11 @@ Generated: 2026-04-21
 
 - Primary stack: Python
 - Key paths: `backend`, `api`, `docs`, `scripts`, `.github/workflows`, `README.md`, `requirements.txt`
-- Files scanned (capped): 47
+- Files scanned (capped): 48
 - Test signal: Test-named files detected
 - CI workflows present: Yes
+- GitHub slug: igor-kan/tennis-prediction-betting-system
+- GitHub last push: 2026-04-21T21:09:05Z
 
 ### Quick Commands
 
@@ -127,6 +129,12 @@ Quality:
 - `PLANNING.md`
 - `RESEARCH.md`
 - `PROJECT_BRIEF.md`
+
+### Web Research References
+
+- Origin remote: `https://github.com/igor-kan/tennis-prediction-betting-system.git`
+- GitHub homepage: Not set
+- `Python: https://docs.python.org/3/`
 <!-- REPO_ANALYSIS_OVERVIEW_END -->
 
 <!-- CORS_AND_GUI_BRIDGE:START -->
@@ -147,3 +155,16 @@ export CORS_ALLOWED_ORIGINS="*"
 export CORS_ALLOWED_ORIGINS="https://igor-kan.github.io,http://127.0.0.1:5500"
 ```
 <!-- CORS_AND_GUI_BRIDGE:END -->
+
+<!-- SMOKE_API_CLI_GUI:START -->
+## One-Command Smoke Check
+
+Run API + CLI + GUI bridge checks together:
+```bash
+./scripts/smoke_api_cli_gui.sh
+```
+
+Optional vars:
+- `SPORT_API_PORT` (default: `8100`)
+- `SPORT_API_BASE_URL` (default: `http://127.0.0.1:$SPORT_API_PORT`)
+<!-- SMOKE_API_CLI_GUI:END -->

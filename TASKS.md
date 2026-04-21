@@ -55,6 +55,7 @@ Repository: `tennis-prediction-betting-system`
 - [ ] Run and verify primary start command(s): `Review repository README for run/start command`
 - [ ] Run quality checks: `Review CI/workflow commands in .github/workflows`
 - [ ] Confirm key paths are still accurate: `backend`, `api`, `docs`, `scripts`, `.github/workflows`, `README.md`, `requirements.txt`
+- [ ] Validate external metadata assumptions from `RESEARCH.md` against upstream changes.
 
 ## Next
 - [ ] Prioritize top 3 reliability improvements for this repository.
@@ -77,3 +78,9 @@ Repository: `tennis-prediction-betting-system`
 - [x] Hardened CLI/TUI with better command/error handling.
 - [ ] Add end-to-end browser automation for GUI bridge.
 <!-- CORS_GUI_TASKS:END -->
+
+<!-- SMOKE_SCRIPT_TASKS:START -->
+## Smoke Automation
+- [x] Added one-command smoke script (`scripts/smoke_api_cli_gui.sh`).
+- [ ] Add this smoke script to CI workflow.
+<!-- SMOKE_SCRIPT_TASKS:END -->
